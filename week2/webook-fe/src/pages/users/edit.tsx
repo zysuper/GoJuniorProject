@@ -7,10 +7,11 @@ import router from "next/router";
 const { TextArea } = Input;
 
 const onFinish = (values: any) => {
+    const pv = {...values}
     if (values.birthday) {
-        values.birthday = moment(values.birthday).format("YYYY-MM-DD")
+        pv.birthday = values.birthday.format("YYYY-MM-DD")
     }
-    axios.post("/users/edit", values)
+    axios.post("/users/edit", pv)
         .then((res) => {
             if(res.status != 200) {
                 alert(res.statusText);
@@ -72,8 +73,7 @@ function EditForm() {
             label="生日"
             name="birthday"
         >
-            <DatePicker format={"YYYY-MM-DD"}
-                        placeholder={""}/>
+            <DatePicker format={"YYYY-MM-DD"} placeholder={""}/>
         </Form.Item>
 
         <Form.Item
