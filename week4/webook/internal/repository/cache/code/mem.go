@@ -16,6 +16,12 @@ type CodeMemoryCache struct {
 	mux   sync.Mutex
 }
 
+func NewMemCodeCache(cache *freecache.Cache) CodeCache {
+	return &CodeMemoryCache{
+		cache: cache,
+	}
+}
+
 func (c *CodeMemoryCache) Set(ctx context.Context, biz, phone, code string) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -99,12 +105,6 @@ func keyBytes(biz string, phone string) []byte {
 
 func keyOfCnt(prefix string) string {
 	return prefix + ":cnt"
-}
-
-func NewMemCodeCache(cache *freecache.Cache) CodeCache {
-	return &CodeMemoryCache{
-		cache: cache,
-	}
 }
 
 func keyCountBytes(biz string, phone string) []byte {
