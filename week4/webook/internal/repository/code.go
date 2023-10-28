@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache/code"
 )
 
-var ErrCodeVerifyTooMany = cache.ErrCodeVerifyTooMany
-var ErrCodeSendTooMany = cache.ErrCodeSendTooMany
+var ErrCodeVerifyTooMany = code.ErrCodeVerifyTooMany
+var ErrCodeSendTooMany = code.ErrCodeSendTooMany
 
 type CodeRepository interface {
 	Set(ctx context.Context, biz, phone, code string) error
@@ -14,7 +14,7 @@ type CodeRepository interface {
 }
 
 type CachedCodeRepository struct {
-	cache cache.CodeCache
+	cache code.CodeCache
 }
 
 func (c *CachedCodeRepository) Set(ctx context.Context, biz, phone, code string) error {
@@ -25,7 +25,7 @@ func (c *CachedCodeRepository) Verify(ctx context.Context, biz, phone, code stri
 	return c.cache.Verify(ctx, biz, phone, code)
 }
 
-func NewCodeRepository(cache cache.CodeCache) CodeRepository {
+func NewCodeRepository(cache code.CodeCache) CodeRepository {
 	return &CachedCodeRepository{
 		cache: cache,
 	}

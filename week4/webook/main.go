@@ -4,6 +4,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/config"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache/code"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms/local"
@@ -42,7 +43,7 @@ func initUserHdl(db *gorm.DB, server *gin.Engine) {
 	})
 
 	// 缓存.
-	cc := cache.NewRedisCodeCache(redisClient)
+	cc := code.NewRedisCodeCache(redisClient)
 	uc := cache.NewRedisUserCache(redisClient)
 
 	// dao.

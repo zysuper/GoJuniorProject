@@ -9,6 +9,7 @@ package main
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache/code"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
@@ -27,7 +28,8 @@ func InitWebServer() *gin.Engine {
 	userRepository := repository.NewUserRepository(userDAO, userCache)
 	passwordValidateService := service.NewPasswordValidator()
 	userService := service.NewUserService(userRepository, passwordValidateService)
-	codeCache := cache.NewRedisCodeCache(cmdable)
+	freecacheCache := ioc.InitLocalCache()
+	codeCache := code.NewMemCodeCache(freecacheCache)
 	codeRepository := repository.NewCodeRepository(codeCache)
 	smsService := ioc.InitSms()
 	codeService := service.NewCodeService(codeRepository, smsService)
