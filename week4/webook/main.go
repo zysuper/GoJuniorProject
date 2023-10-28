@@ -6,6 +6,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms/local"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
@@ -33,15 +34,38 @@ func main() {
 }
 
 func initUserHdl(db *gorm.DB, server *gin.Engine) {
+	// 第三方资源.
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: config.Config.Redis.Addr,
 	})
+
+	// 缓存.
+	cc := cache.NewRedisCodeCache(redisClient)
 	uc := cache.NewRedisUserCache(redisClient)
+
+	// dao.
 	ud := dao.NewUserDAO(db)
+
+	// repository.
+	cr := repository.NewCodeRepository(cc)
 	ur := repository.NewUserRepository(ud, uc)
+
+	// 本地短信服务.
+	sms := local.NewService()
+
+	// code 码服务.
+	cs := service.NewCodeService(cr, sms)
+
+	// 密码校验服务.
 	pv := service.NewPasswordValidator()
+
+	// 用户服务.
 	us := service.NewUserService(ur, pv)
-	hdl := web.NewUserHandler(us)
+
+	// 用户应用层控制器.
+	hdl := web.NewUserHandler(us, cs)
+
+	// 路由注册.
 	hdl.RegisterRoutes(server)
 }
 

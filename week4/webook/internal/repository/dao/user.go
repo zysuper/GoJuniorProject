@@ -2,7 +2,9 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 	"time"
@@ -60,9 +62,15 @@ func (dao *UserDAO) FindById(ctx context.Context, uid int64) (User, error) {
 	return mUser, err
 }
 
+func (dao *UserDAO) FindByPhone(ctx *gin.Context, phone string) (User, error) {
+	var mUser User
+	err := dao.db.WithContext(ctx).Where("phone = ?", phone).First(&mUser).Error
+	return mUser, err
+}
+
 type User struct {
-	Id       int64  `gorm:"primaryKey,autoIncrement"`
-	Email    string `gorm:"unique"`
+	Id       int64          `gorm:"primaryKey,autoIncrement"`
+	Email    sql.NullString `gorm:"unique"`
 	Password string
 
 	Nickname string `gorm:"type=varchar(128)"`
@@ -75,6 +83,8 @@ type User struct {
 	Ctime int64
 	// 更新时间
 	Utime int64
+
+	Phone sql.NullString `gorm:"unique"`
 
 	// json 存储
 	//Addr string

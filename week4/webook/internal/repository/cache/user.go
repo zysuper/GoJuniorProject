@@ -30,7 +30,7 @@ func (r *RedisUserCache) Get(ctx context.Context, id int64) (domain.User, error)
 
 	var u domain.User
 
-	json.Unmarshal([]byte(result), u)
+	json.Unmarshal([]byte(result), &u)
 
 	return u, nil
 }
