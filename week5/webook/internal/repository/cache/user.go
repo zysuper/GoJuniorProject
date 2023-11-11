@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var ErrKeyNotExist = redis.Nil
+
 type UserCache interface {
 	Key(id int64) string
 	Set(ctx context.Context, u domain.User) error

@@ -24,11 +24,11 @@ type UserRepository interface {
 }
 
 type CachedUserRepository struct {
-	dao   *dao.UserDAO
+	dao   dao.UserDAO
 	cache cache.UserCache
 }
 
-func NewUserRepository(dao *dao.UserDAO, cache cache.UserCache) UserRepository {
+func NewUserRepository(dao dao.UserDAO, cache cache.UserCache) UserRepository {
 	return &CachedUserRepository{
 		dao:   dao,
 		cache: cache,
@@ -60,6 +60,7 @@ func (repo *CachedUserRepository) toDomain(u dao.User) domain.User {
 		Nickname: u.Nickname,
 		Phone:    u.Phone.String,
 		Birthday: time.UnixMilli(u.Birthday),
+		Ctime:    time.UnixMilli(u.Ctime),
 	}
 }
 
@@ -100,7 +101,7 @@ func (repo *CachedUserRepository) FindById(ctx context.Context, uid int64) (doma
 	result := repo.toDomain(u)
 	repo.cache.Set(ctx, result)
 
-	return ret, nil
+	return result, nil
 }
 
 func (repo *CachedUserRepository) FindByPhone(ctx *gin.Context, phone string) (domain.User, error) {
