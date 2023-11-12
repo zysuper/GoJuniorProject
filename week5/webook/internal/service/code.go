@@ -22,10 +22,10 @@ type CodeService interface {
 
 type codeService struct {
 	repo repository.CodeRepository
-	sms  sms.Service
+	sms  sms.SmsService
 }
 
-func NewCodeService(repo repository.CodeRepository, sms sms.Service) CodeService {
+func NewCodeService(repo repository.CodeRepository, sms sms.SmsService) CodeService {
 	return &codeService{repo: repo, sms: sms}
 }
 

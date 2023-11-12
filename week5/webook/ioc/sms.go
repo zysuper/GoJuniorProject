@@ -5,6 +5,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms/local"
 )
 
-func InitSms() sms.Service {
+func InitSms() sms.SmsService {
 	return local.NewService()
 }

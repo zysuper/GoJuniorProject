@@ -14,6 +14,6 @@ func (s Service) Send(ctx context.Context, tplId string, args []string, numbers 
 	return nil
 }
 
-func NewService() sms.Service {
+func NewService() sms.SmsService {
 	return &Service{}
 }
