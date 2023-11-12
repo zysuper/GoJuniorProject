@@ -12,6 +12,8 @@ const (
 	HalfOpen
 )
 
+var CbCloseError = errors.New("熔断状态，直接异常")
+
 type CircuitBreakerService struct {
 	// 状态为 0 - 打开， 1 - 关闭， 2 - 半开半闭
 	state int32
@@ -38,7 +40,7 @@ func (c *CircuitBreakerService) Do(args ...any) error {
 	cnt := atomic.LoadInt32(&c.cnt)
 	switch state {
 	case Open:
-		err := c.doWhat(args)
+		err := c.doWhat(args...)
 		if err != nil {
 			// 处理 open 状态下到 error 异常
 			c.openStateError(cnt, state)
@@ -46,8 +48,7 @@ func (c *CircuitBreakerService) Do(args ...any) error {
 		}
 		return nil
 	case Close:
-		return errors.New("熔断状态，直接异常")
-	case HalfOpen:
+		return CbCloseError
 		err := c.doWhat(args)
 		if err != nil {
 			// 直接恢复 close 状态.

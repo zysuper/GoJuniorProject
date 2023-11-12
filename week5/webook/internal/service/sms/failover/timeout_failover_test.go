@@ -25,7 +25,7 @@ func TestTimeoutFailoverSMSService_Send(t *testing.T) {
 		{
 			name: "咩有触发切换",
 			mock: func(ctrl *gomock.Controller) []sms.Service {
-				svc0 := smsmocks.NewMockSmsService(ctrl)
+				svc0 := smsmocks.NewMockService(ctrl)
 				svc0.EXPECT().Send(gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any()).Return(nil)
 				return []sms.Service{svc0}
@@ -41,8 +41,8 @@ func TestTimeoutFailoverSMSService_Send(t *testing.T) {
 		{
 			name: "触发切换，成功",
 			mock: func(ctrl *gomock.Controller) []sms.Service {
-				svc0 := smsmocks.NewMockSmsService(ctrl)
-				svc1 := smsmocks.NewMockSmsService(ctrl)
+				svc0 := smsmocks.NewMockService(ctrl)
+				svc1 := smsmocks.NewMockService(ctrl)
 				svc1.EXPECT().Send(gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any()).Return(nil)
 				return []sms.Service{svc0, svc1}
@@ -58,8 +58,8 @@ func TestTimeoutFailoverSMSService_Send(t *testing.T) {
 		{
 			name: "触发切换，失败",
 			mock: func(ctrl *gomock.Controller) []sms.Service {
-				svc0 := smsmocks.NewMockSmsService(ctrl)
-				svc1 := smsmocks.NewMockSmsService(ctrl)
+				svc0 := smsmocks.NewMockService(ctrl)
+				svc1 := smsmocks.NewMockService(ctrl)
 				svc0.EXPECT().Send(gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any()).Return(errors.New("发送失败"))
 				return []sms.Service{svc0, svc1}
@@ -74,8 +74,8 @@ func TestTimeoutFailoverSMSService_Send(t *testing.T) {
 		{
 			name: "触发切换，超时",
 			mock: func(ctrl *gomock.Controller) []sms.Service {
-				svc0 := smsmocks.NewMockSmsService(ctrl)
-				svc1 := smsmocks.NewMockSmsService(ctrl)
+				svc0 := smsmocks.NewMockService(ctrl)
+				svc1 := smsmocks.NewMockService(ctrl)
 				svc0.EXPECT().Send(gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any()).
 					Return(context.DeadlineExceeded)

@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var LimitedError = errors.New("服务太忙，稍后再试")
+
 type AsyncFailoverService struct {
 	cb        cb.CircuitBreaker
 	limiter   limiter.Limiter
@@ -21,6 +23,24 @@ type AsyncFailoverService struct {
 	key       string
 	retryTime time.Duration
 	retryCnt  int
+}
+
+func NewAsyncFailoverService(
+	cb cb.CircuitBreaker,
+	limiter limiter.Limiter,
+	svc sms.Service,
+	repo repository.MsgRepository,
+	retryTime time.Duration,
+	retryCnt int,
+) sms.Service {
+	return &AsyncFailoverService{
+		cb:        cb,
+		limiter:   limiter,
+		svc:       svc,
+		repo:      repo,
+		retryTime: retryTime,
+		retryCnt:  retryCnt,
+		key:       "async-sms-service"}
 }
 
 func (a *AsyncFailoverService) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
@@ -34,7 +54,7 @@ func (a *AsyncFailoverService) Send(ctx context.Context, tplId string, args []st
 	if limited {
 		// 1. 触发限流，要进行异步发送.
 		a.asyncSave(ctx, tplId, args, numbers)
-		return errors.New("服务太忙，稍后再试")
+		return LimitedError
 	}
 
 	// 要么 redis 崩了， 要么没有崩，都是直接访问了.

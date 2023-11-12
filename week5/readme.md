@@ -42,10 +42,12 @@
 
 ## 代码实现
 
-[跳转到熔断器实现](./webook/internal/service/sms/circuit_breaker/circuit_breaker.go)
+1. [跳转到熔断器实现](./webook/internal/service/sms/circuit_breaker/circuit_breaker.go)
+1. [异步存储后异步重试发送实现](./webook/internal/service/sms/failover/async_failover.go)
 
 ## 单元测试
 
-[跳转到熔断器实现测试用例](./webook/internal/service/sms/circuit_breaker/circuit_breaker_test.go)
+1. [跳转到熔断器实现测试用例](./webook/internal/service/sms/circuit_breaker/circuit_breaker_test.go)
+1. [异步存储后异步重试发送实现测试用例](./webook/internal/service/sms/failover/async_failover_test.go)
 
 
