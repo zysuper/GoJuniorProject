@@ -31,7 +31,7 @@ func InitWebServer() *gin.Engine {
 	freecacheCache := ioc.InitLocalCache()
 	codeCache := code.NewMemCodeCache(freecacheCache)
 	codeRepository := repository.NewCodeRepository(codeCache)
-	smsService := ioc.InitSms()
+	smsService := ioc.InitSms(cmdable)
 	codeService := service.NewCodeService(codeRepository, smsService)
 	userHandler := web.NewUserHandler(userService, codeService)
 	engine := ioc.InitWebServer(v, userHandler)

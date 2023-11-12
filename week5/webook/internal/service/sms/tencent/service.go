@@ -52,7 +52,7 @@ func (s *Service) toPtrSlice(data []string) []*string {
 		})
 }
 
-func NewService(client *tsms.Client, appId string, signName string) sms.SmsService {
+func NewService(client *tsms.Client, appId string, signName string) sms.Service {
 	return &Service{
 		client:   client,
 		appId:    &appId,

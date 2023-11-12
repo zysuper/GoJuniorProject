@@ -13,37 +13,37 @@ import (
 func TestFailOverSmsService_Send(t *testing.T) {
 	tests := []struct {
 		name    string
-		mock    func(controller *gomock.Controller) []sms.SmsService
+		mock    func(controller *gomock.Controller) []sms.Service
 		wantErr error
 	}{
 		{
 			name: "第一次发送成功",
-			mock: func(controller *gomock.Controller) []sms.SmsService {
-				svc := smsmocks.NewMockSmsService(controller)
+			mock: func(controller *gomock.Controller) []sms.Service {
+				svc := smsmocks.NewMockService(controller)
 				svc.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				return []sms.SmsService{svc}
+				return []sms.Service{svc}
 			},
 			wantErr: nil,
 		},
 		{
 			name: "第二次发送成功",
-			mock: func(controller *gomock.Controller) []sms.SmsService {
-				svc0 := smsmocks.NewMockSmsService(controller)
+			mock: func(controller *gomock.Controller) []sms.Service {
+				svc0 := smsmocks.NewMockService(controller)
 				svc0.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("居然发送失败了，呜呜"))
-				svc1 := smsmocks.NewMockSmsService(controller)
+				svc1 := smsmocks.NewMockService(controller)
 				svc1.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				return []sms.SmsService{svc0, svc1}
+				return []sms.Service{svc0, svc1}
 			},
 			wantErr: nil,
 		},
 		{
 			name: "全部发送失败",
-			mock: func(controller *gomock.Controller) []sms.SmsService {
-				svc0 := smsmocks.NewMockSmsService(controller)
+			mock: func(controller *gomock.Controller) []sms.Service {
+				svc0 := smsmocks.NewMockService(controller)
 				svc0.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("居然发送失败了，呜呜"))
-				svc1 := smsmocks.NewMockSmsService(controller)
+				svc1 := smsmocks.NewMockService(controller)
 				svc1.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("又发送失败了"))
-				return []sms.SmsService{svc0, svc1}
+				return []sms.Service{svc0, svc1}
 			},
 			wantErr: AllSendFailed,
 		},

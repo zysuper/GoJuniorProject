@@ -15,31 +15,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockSmsService is a mock of SmsService interface.
-type MockSmsService struct {
+// MockService is a mock of Service interface.
+type MockService struct {
 	ctrl     *gomock.Controller
-	recorder *MockSmsServiceMockRecorder
+	recorder *MockServiceMockRecorder
 }
 
-// MockSmsServiceMockRecorder is the mock recorder for MockSmsService.
-type MockSmsServiceMockRecorder struct {
-	mock *MockSmsService
+// MockServiceMockRecorder is the mock recorder for MockService.
+type MockServiceMockRecorder struct {
+	mock *MockService
 }
 
-// NewMockSmsService creates a new mock instance.
-func NewMockSmsService(ctrl *gomock.Controller) *MockSmsService {
-	mock := &MockSmsService{ctrl: ctrl}
-	mock.recorder = &MockSmsServiceMockRecorder{mock}
+// NewMockService creates a new mock instance.
+func NewMockService(ctrl *gomock.Controller) *MockService {
+	mock := &MockService{ctrl: ctrl}
+	mock.recorder = &MockServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSmsService) EXPECT() *MockSmsServiceMockRecorder {
+func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
 // Send mocks base method.
-func (m *MockSmsService) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+func (m *MockService) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, tplId, args}
 	for _, a := range numbers {
@@ -51,8 +51,8 @@ func (m *MockSmsService) Send(ctx context.Context, tplId string, args []string, 
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockSmsServiceMockRecorder) Send(ctx, tplId, args any, numbers ...any) *gomock.Call {
+func (mr *MockServiceMockRecorder) Send(ctx, tplId, args any, numbers ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, tplId, args}, numbers...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockSmsService)(nil).Send), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockService)(nil).Send), varargs...)
 }

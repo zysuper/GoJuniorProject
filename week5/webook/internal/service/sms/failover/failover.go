@@ -9,13 +9,13 @@ import (
 )
 
 type FailOverSmsService struct {
-	svcs []sms.SmsService
+	svcs []sms.Service
 	idx  uint64
 }
 
 var AllSendFailed = errors.New("所有 sms 服务商都没法提供服务")
 
-func NewFailOverSmsService(svcs []sms.SmsService) sms.SmsService {
+func NewFailOverSmsService(svcs []sms.Service) sms.Service {
 	return &FailOverSmsService{svcs: svcs}
 }
 
