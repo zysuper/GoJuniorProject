@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+type FunctionalCircuitBreaker struct {
+	fun func(...any) error
+}
+
+func (f *FunctionalCircuitBreaker) Do(args ...any) error {
+	return f.fun(args)
+}
+
+func NewFuncCircuitBreaker(fun func(...any) error) CircuitBreaker {
+	return &FunctionalCircuitBreaker{fun: fun}
+}
+
 func TestCircuitBreakerService_Do(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -14,7 +26,7 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 		cnt         int32
 		threshold   int32
 		recoverTime time.Duration
-		doWhat      func(args ...any) error
+		doWhat      CircuitBreaker
 		wantErr     error
 		wantState   int32
 		wantCnt     int32
@@ -25,9 +37,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         1,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return nil
-			},
+			}),
 			wantState: Open,
 			wantCnt:   int32(1),
 			wantErr:   nil,
@@ -38,9 +50,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         0,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return errors.New("呜呜呜，干翻了")
-			},
+			}),
 			wantState: Open,
 			wantCnt:   int32(1),
 			wantErr:   errors.New("呜呜呜，干翻了"),
@@ -51,9 +63,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         2,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return errors.New("呜呜呜，干翻了")
-			},
+			}),
 			wantState: Close,
 			wantCnt:   int32(0),
 			wantErr:   errors.New("呜呜呜，干翻了"),
@@ -64,9 +76,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         2,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return nil
-			},
+			}),
 			wantState: Open,
 			wantCnt:   int32(0),
 			wantErr:   nil,
@@ -77,9 +89,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         1,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return nil
-			},
+			}),
 			wantState: HalfOpen,
 			wantCnt:   2,
 			wantErr:   nil,
@@ -90,9 +102,9 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 			cnt:         2,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(args ...any) error {
+			doWhat: NewFuncCircuitBreaker(func(args ...any) error {
 				return errors.New("呜呜呜，干翻了")
-			},
+			}),
 			wantState: Close,
 			wantCnt:   0,
 			wantErr:   errors.New("呜呜呜，干翻了"),
@@ -105,7 +117,7 @@ func TestCircuitBreakerService_Do(t *testing.T) {
 				cnt:         tt.cnt,
 				threshold:   tt.threshold,
 				recoverTime: tt.recoverTime,
-				doWhat:      tt.doWhat,
+				handler:     tt.doWhat,
 			}
 			err := svc.Do()
 			assert.Equal(t, tt.wantState, svc.state)
@@ -122,7 +134,7 @@ func TestCircuitBreakerService_Do_Close2Half(t *testing.T) {
 		cnt         int32
 		threshold   int32
 		recoverTime time.Duration
-		doWhat      func(...any) error
+		doWhat      CircuitBreaker
 		wantErr     error
 		wantState   int32
 		wantCnt     int32
@@ -132,9 +144,9 @@ func TestCircuitBreakerService_Do_Close2Half(t *testing.T) {
 			cnt:         2,
 			threshold:   3,
 			recoverTime: time.Second,
-			doWhat: func(...any) error {
+			doWhat: NewFuncCircuitBreaker(func(...any) error {
 				return errors.New("呜呜呜，干翻了")
-			},
+			}),
 			wantState: HalfOpen,
 			wantCnt:   int32(0),
 			wantErr:   errors.New("呜呜呜，干翻了"),
@@ -147,7 +159,7 @@ func TestCircuitBreakerService_Do_Close2Half(t *testing.T) {
 				cnt:         tt.cnt,
 				threshold:   tt.threshold,
 				recoverTime: tt.recoverTime,
-				doWhat:      tt.doWhat,
+				handler:     tt.doWhat,
 			}
 			err := svc.Do()
 			// 睡一会儿，等到 half 状态.
