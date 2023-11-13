@@ -18,7 +18,6 @@ var LimitedError = errors.New("服务太忙，稍后再试")
 type AsyncFailoverService struct {
 	cb        cb.CircuitBreaker
 	limiter   limiter.Limiter
-	svc       sms.Service
 	repo      repository.MsgRepository
 	key       string
 	retryTime time.Duration
@@ -28,7 +27,6 @@ type AsyncFailoverService struct {
 func NewAsyncFailoverService(
 	cb cb.CircuitBreaker,
 	limiter limiter.Limiter,
-	svc sms.Service,
 	repo repository.MsgRepository,
 	retryTime time.Duration,
 	retryCnt int,
@@ -36,7 +34,6 @@ func NewAsyncFailoverService(
 	return &AsyncFailoverService{
 		cb:        cb,
 		limiter:   limiter,
-		svc:       svc,
 		repo:      repo,
 		retryTime: retryTime,
 		retryCnt:  retryCnt,

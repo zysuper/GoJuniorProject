@@ -49,6 +49,7 @@ func (c *CircuitBreakerService) Do(args ...any) error {
 		return nil
 	case Close:
 		return CbCloseError
+	case HalfOpen:
 		err := c.doWhat(args)
 		if err != nil {
 			// 直接恢复 close 状态.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	repomocks "gitee.com/geekbang/basic-go/webook/internal/repository/mocks"
-	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
 	cb "gitee.com/geekbang/basic-go/webook/internal/service/sms/circuit_breaker"
 	smsmocks "gitee.com/geekbang/basic-go/webook/internal/service/sms/mocks"
 	"gitee.com/geekbang/basic-go/webook/pkg/limiter"
@@ -21,13 +20,13 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 		retryTime time.Duration
 		retryCnt  int
 		wantErr   error
-		mock      func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, sms.Service, repository.MsgRepository)
+		mock      func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository)
 	}{
 		{
 			name:      "直接成功",
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
-			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, sms.Service, repository.MsgRepository) {
+			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
 				limiter := limitermocks.NewMockLimiter(controller)
 				sms := smsmocks.NewMockService(controller)
 				cb := cb.NewCircuitBreaker(3, time.Second, func(args ...any) error {
@@ -36,22 +35,21 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 				msg := repomocks.NewMockMsgRepository(controller)
 				sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
-				return cb, limiter, sms, msg
+				return cb, limiter, msg
 			},
 		},
 		{
 			name:      "被熔断",
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
-			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, sms.Service, repository.MsgRepository) {
+			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
 				limiter := limitermocks.NewMockLimiter(controller)
-				sms := smsmocks.NewMockService(controller)
 				cbb := smsmocks.NewMockCircuitBreaker(controller)
 				msg := repomocks.NewMockMsgRepository(controller)
 				//sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
 				cbb.EXPECT().Do(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(cb.CbCloseError)
-				return cbb, limiter, sms, msg
+				return cbb, limiter, msg
 			},
 			wantErr: cb.CbCloseError,
 		},
@@ -59,7 +57,7 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 			name:      "被限流",
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
-			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, sms.Service, repository.MsgRepository) {
+			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
 				limiter := limitermocks.NewMockLimiter(controller)
 				sms := smsmocks.NewMockService(controller)
 				cb := cb.NewCircuitBreaker(3, time.Second, func(args ...any) error {
@@ -69,7 +67,7 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 				//sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(true, nil)
 				//msgRepo.EXPECT().Create(gomock.Any(), gomock.Any()).Return(int64(123), nil)
-				return cb, limiter, sms, msgRepo
+				return cb, limiter, msgRepo
 			},
 			wantErr: LimitedError,
 		},
@@ -78,8 +76,8 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			cb, limiter, sms, msgRepo := tt.mock(ctrl)
-			service := NewAsyncFailoverService(cb, limiter, sms, msgRepo, tt.retryTime, tt.retryCnt)
+			cb, limiter, msgRepo := tt.mock(ctrl)
+			service := NewAsyncFailoverService(cb, limiter, msgRepo, tt.retryTime, tt.retryCnt)
 			err := service.Send(context.Background(), "123", []string{"hello,world"}, "123q444")
 			assert.Equal(t, tt.wantErr, err)
 		})
