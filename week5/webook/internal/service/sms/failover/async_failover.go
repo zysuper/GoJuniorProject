@@ -98,7 +98,7 @@ func (a *AsyncFailoverService) asyncSend(ctx context.Context, id int64) {
 				continue
 			}
 
-			err = a.cb.Do(msg.Args)
+			err = a.cb.Do(ctx, msg.TplId, msg.Args, msg.Numbers)
 			if err != nil {
 				tryCnt++
 				if tryCnt >= a.retryCnt {
