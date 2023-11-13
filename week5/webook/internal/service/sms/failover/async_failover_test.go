@@ -38,7 +38,7 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 			},
 		},
 		{
-			name:      "被熔断",
+			name:      "被熔断, 然后过一会，熔断器进入 half 状态，再发送成功了",
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
 			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
