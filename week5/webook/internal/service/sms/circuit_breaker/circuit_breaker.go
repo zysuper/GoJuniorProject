@@ -24,14 +24,14 @@ type CircuitBreakerService struct {
 	// 熔断恢复时间间隔.
 	recoverTime time.Duration
 	// 具体干的事情，熔断器本身不关心.
-	doWhat func(args ...any) error
+	handler CircuitBreaker
 }
 
-func NewCircuitBreaker(threshold int32, recoverTime time.Duration, doWhat func(args ...any) error) CircuitBreaker {
+func NewCircuitBreaker(threshold int32, recoverTime time.Duration, handler CircuitBreaker) CircuitBreaker {
 	return &CircuitBreakerService{
 		threshold:   threshold,
 		recoverTime: recoverTime,
-		doWhat:      doWhat,
+		handler:     handler,
 	}
 }
 
@@ -40,7 +40,7 @@ func (c *CircuitBreakerService) Do(args ...any) error {
 	cnt := atomic.LoadInt32(&c.cnt)
 	switch state {
 	case Open:
-		err := c.doWhat(args...)
+		err := c.handler.Do(args...)
 		if err != nil {
 			// 处理 open 状态下到 error 异常
 			c.openStateError(cnt, state)
@@ -50,7 +50,7 @@ func (c *CircuitBreakerService) Do(args ...any) error {
 	case Close:
 		return CbCloseError
 	case HalfOpen:
-		err := c.doWhat(args)
+		err := c.handler.Do(args)
 		if err != nil {
 			// 直接恢复 close 状态.
 			c.toCloseState(state)

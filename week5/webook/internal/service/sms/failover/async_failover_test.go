@@ -27,15 +27,13 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
 			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
-				limiter := limitermocks.NewMockLimiter(controller)
+				lt := limitermocks.NewMockLimiter(controller)
 				sms := smsmocks.NewMockService(controller)
-				cb := cb.NewCircuitBreaker(3, time.Second, func(args ...any) error {
-					return sms.Send(args[0].(context.Context), args[1].(string), args[2].([]string), args[3].([]string)...)
-				})
+				cbb := cb.NewCircuitBreaker(3, time.Second, cb.NewSmsCircuitBreakerAdapter(sms))
 				msg := repomocks.NewMockMsgRepository(controller)
 				sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
-				return cb, limiter, msg
+				lt.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
+				return cbb, lt, msg
 			},
 		},
 		{
@@ -43,13 +41,13 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
 			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
-				limiter := limitermocks.NewMockLimiter(controller)
+				lt := limitermocks.NewMockLimiter(controller)
 				cbb := smsmocks.NewMockCircuitBreaker(controller)
 				msg := repomocks.NewMockMsgRepository(controller)
 				//sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
+				lt.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(false, nil)
 				cbb.EXPECT().Do(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(cb.CbCloseError)
-				return cbb, limiter, msg
+				return cbb, lt, msg
 			},
 			wantErr: cb.CbCloseError,
 		},
@@ -58,16 +56,14 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 			retryTime: time.Millisecond * 30,
 			retryCnt:  3,
 			mock: func(controller *gomock.Controller) (cb.CircuitBreaker, limiter.Limiter, repository.MsgRepository) {
-				limiter := limitermocks.NewMockLimiter(controller)
+				lt := limitermocks.NewMockLimiter(controller)
 				sms := smsmocks.NewMockService(controller)
-				cb := cb.NewCircuitBreaker(3, time.Second, func(args ...any) error {
-					return sms.Send(args[0].(context.Context), args[1].(string), args[2].([]string), args[3].([]string)...)
-				})
+				c := cb.NewCircuitBreaker(3, time.Second, cb.NewSmsCircuitBreakerAdapter(sms))
 				msgRepo := repomocks.NewMockMsgRepository(controller)
 				//sms.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				limiter.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(true, nil)
+				lt.EXPECT().Limit(gomock.Any(), gomock.Any()).Return(true, nil)
 				//msgRepo.EXPECT().Create(gomock.Any(), gomock.Any()).Return(int64(123), nil)
-				return cb, limiter, msgRepo
+				return c, lt, msgRepo
 			},
 			wantErr: LimitedError,
 		},
@@ -76,8 +72,8 @@ func TestAsyncFailoverService_Send(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			cb, limiter, msgRepo := tt.mock(ctrl)
-			service := NewAsyncFailoverService(cb, limiter, msgRepo, tt.retryTime, tt.retryCnt)
+			c, lt, msgRepo := tt.mock(ctrl)
+			service := NewAsyncFailoverService(c, lt, msgRepo, tt.retryTime, tt.retryCnt)
 			err := service.Send(context.Background(), "123", []string{"hello,world"}, "123q444")
 			assert.Equal(t, tt.wantErr, err)
 		})

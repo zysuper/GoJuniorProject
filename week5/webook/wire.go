@@ -23,8 +23,11 @@ func InitWebServer() *gin.Engine {
 		// 内存本地实现的 code cache...
 		ioc.InitLocalCache, code.NewMemCodeCache,
 		dao.NewUserDAO,
+		dao.NewMsgDao,
 		repository.NewUserRepository,
 		repository.NewCodeRepository,
+		repository.NewMsgRepository,
+		ioc.NewSmsCircuitBreaker,
 		ioc.InitSms,
 		service.NewCodeService,
 		service.NewPasswordValidator,
