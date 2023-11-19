@@ -66,6 +66,10 @@ func (l *LogMiddlewareBuilder) Build() gin.HandlerFunc {
 		defer func() {
 			al.Duration = time.Since(start)
 			//duration := time.Now().Sub(start)
+			// 统一打印错误日志.
+			if l := len(ctx.Errors); l > 0 {
+				al.ErrorMsg = ctx.Errors[l-1]
+			}
 			l.logFn(ctx, al)
 		}()
 
@@ -82,6 +86,7 @@ type AccessLog struct {
 	Status   int           `json:"status"`
 	RespBody string        `json:"resp_body"`
 	Duration time.Duration `json:"duration"`
+	ErrorMsg error         `json:"error_msg"`
 }
 
 type responseWriter struct {

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -69,30 +70,36 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 
 	var req SignUpReq
 	if err := ctx.Bind(&req); err != nil {
+		ctx.Error(err)
 		return
 	}
 
 	isEmail, err := h.emailRexExp.MatchString(req.Email)
 	if err != nil {
+		ctx.Error(err)
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
 	if !isEmail {
+		ctx.Error(errors.New("非法邮箱格式"))
 		ctx.String(http.StatusOK, "非法邮箱格式")
 		return
 	}
 
 	if req.Password != req.ConfirmPassword {
+		ctx.Error(errors.New("两次输入密码不对"))
 		ctx.String(http.StatusOK, "两次输入密码不对")
 		return
 	}
 
 	isPassword, err := h.passwordRexExp.MatchString(req.Password)
 	if err != nil {
+		ctx.Error(err)
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
 	if !isPassword {
+		ctx.Error(errors.New("密码必须包含字母、数字、特殊字符，并且不少于八位"))
 		ctx.String(http.StatusOK, "密码必须包含字母、数字、特殊字符，并且不少于八位")
 		return
 	}
@@ -105,8 +112,10 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 	case nil:
 		ctx.String(http.StatusOK, "注册成功")
 	case service.ErrDuplicateUser:
+		ctx.Error(errors.New("邮箱冲突，请换一个"))
 		ctx.String(http.StatusOK, "邮箱冲突，请换一个")
 	default:
+		ctx.Error(err)
 		ctx.String(http.StatusOK, "系统错误")
 	}
 }
