@@ -18,6 +18,7 @@ import (
 func InitWebServer() *gin.Engine {
 	wire.Build(
 		ioc.InitDB, ioc.InitRedis,
+		ioc.InitLogger,
 		cache.NewRedisUserCache,
 		// redis 实现的 code cache.
 		// code.NewRedisCodeCache,

@@ -1,10 +1,12 @@
 package ioc
 
 import (
+	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -22,7 +24,7 @@ func InitWebServer(middlewares []gin.HandlerFunc, handler *web.UserHandler, wech
 	return server
 }
 
-func InitGinMiddlewares(cmdable redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFunc {
+func InitGinMiddlewares(cmdable redis.Cmdable, hdl ijwt.Handler, l logger.LoggerV1) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		cors.New(cors.Config{
 			//AllowAllOrigins: true,
@@ -46,6 +48,9 @@ func InitGinMiddlewares(cmdable redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFu
 			println("这是我的 Middleware")
 		},
 		ratelimit.NewBuilder(NewRedisIpRouteLimiter(cmdable)).Build(),
+		middleware.NewLogMiddlewareBuilder(func(ctx context.Context, al middleware.AccessLog) {
+			l.Debug("", logger.Field{Key: "req", Val: al})
+		}).AllowReqBody().AllowRespBody().Build(),
 		middleware.NewLoginJWTMiddlewareBuilder(hdl).CheckLogin(),
 	}
 }
