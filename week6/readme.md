@@ -14,15 +14,15 @@
 
 以 user handler 的 `SignUp` 方法为例，异常分支，设置 `cox.Error`
 
-![image-20231119225119910](/Users/zysuper/Library/Application Support/typora-user-images/image-20231119225119910.png)
+![image-20231119225119910](pic/image-20231119225119910.png)
 
 然后，在 log 中间件，对 Error 进行统一打印：
 
-![image-20231119225254930](/Users/zysuper/Library/Application Support/typora-user-images/image-20231119225254930.png)
+![image-20231119225254930](pic/image-20231119225254930.png)
 
 最终日志效果如下：
 
-![image-20231119225331017](/Users/zysuper/Library/Application Support/typora-user-images/image-20231119225331017.png)
+![image-20231119225331017](pic/image-20231119225331017.png)
 
 ### 代码快捷跳转
 
