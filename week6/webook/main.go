@@ -5,11 +5,12 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"log"
 )
 
 func main() {
-	initViper()
+	initViperRemote()
 	server := InitWebServer()
 	server.Run(":8080")
 }
@@ -88,7 +89,7 @@ db:
 
 func initViperRemote() {
 	err := viper.AddRemoteProvider("etcd3",
-		"http://127.0.0.1:12379", "/webook")
+		"127.0.0.1:2379", "/webook")
 	if err != nil {
 		panic(err)
 	}
@@ -96,16 +97,16 @@ func initViperRemote() {
 	viper.OnConfigChange(func(in fsnotify.Event) {
 		log.Println("远程配置中心发生变更")
 	})
-	go func() {
-		for {
-			err = viper.WatchRemoteConfig()
-			if err != nil {
-				panic(err)
-			}
-			log.Println("watch", viper.GetString("test.key"))
-			//time.Sleep(time.Second)
-		}
-	}()
+	//go func() {
+	//	for {
+	//		err = viper.WatchRemoteConfig()
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		log.Println("watch", viper.GetString("test.key"))
+	//		//time.Sleep(time.Second)
+	//	}
+	//}()
 	err = viper.ReadRemoteConfig()
 	if err != nil {
 		panic(err)
