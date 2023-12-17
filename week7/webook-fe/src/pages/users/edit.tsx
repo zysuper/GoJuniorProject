@@ -7,11 +7,10 @@ import router from "next/router";
 const { TextArea } = Input;
 
 const onFinish = (values: any) => {
-    const pv = {...values}
     if (values.birthday) {
-        pv.birthday = values.birthday.format("YYYY-MM-DD")
+        values.birthday = moment(values.birthday).format("YYYY-MM-DD")
     }
-    axios.post("/users/edit", pv)
+    axios.post("/users/edit", values)
         .then((res) => {
             if(res.status != 200) {
                 alert(res.statusText);
@@ -32,7 +31,7 @@ const onFinishFailed = (errorInfo: any) => {
 };
 
 function EditForm() {
-    let p: Profile = {Email: "", Phone: "", Nickname: "", Birthday:"", AboutMe: ""}
+    const p: Profile = {} as Profile
     const [data, setData] = useState<Profile>(p)
     const [isLoading, setLoading] = useState(false)
 
@@ -73,7 +72,8 @@ function EditForm() {
             label="生日"
             name="birthday"
         >
-            <DatePicker format={"YYYY-MM-DD"} placeholder={""}/>
+            <DatePicker format={"YYYY-MM-DD"}
+                        placeholder={""}/>
         </Form.Item>
 
         <Form.Item
