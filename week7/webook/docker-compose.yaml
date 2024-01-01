@@ -13,7 +13,14 @@ services:
     ports:
 #      - 外部访问用 13316
       - 13316:3306
-
+  mongo:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
   redis:
     image: "redis:latest"
     restart: always
