@@ -7,7 +7,7 @@ import (
 )
 
 type LikeTopNDAO interface {
-	QueryLikeNList(context context.Context, bizKey string, n int) []domain.TopLike
+	QueryLikeNList(context context.Context, bizKey string, n int) ([]domain.TopLike, error)
 }
 
 type GORMLikeTopNDAO struct {
@@ -22,9 +22,8 @@ func (g *GORMLikeTopNDAO) QueryLikeNList(context context.Context, bizKey string,
 	var results []domain.TopLike
 	g.Db.
 		WithContext(context).
-		Select("a.id aid,a.title title,a.author_id as author_id,u.nickname,i.like_cnt as like_count").
+		Select("i.biz_id, i.like_cnt").
 		Table("interactives i").
-		Joins("join articles a on a.id = i.biz_id join users u on a.author_id = u.id").
 		Where(`i.biz = ?`, bizKey).
 		Order("i.like_cnt desc").
 		Limit(n).
