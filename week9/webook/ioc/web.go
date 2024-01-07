@@ -5,8 +5,6 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
-	"gitee.com/geekbang/basic-go/webook/pkg/ginx/middleware/ratelimit"
-	"gitee.com/geekbang/basic-go/webook/pkg/limiter"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -28,12 +26,14 @@ import (
 func InitWebServer(mdls []gin.HandlerFunc,
 	userHdl *web.UserHandler,
 	artHdl *web.ArticleHandler,
-	wechatHdl *web.OAuth2WechatHandler) *gin.Engine {
+	wechatHdl *web.OAuth2WechatHandler,
+	likeTopHdl *web.LikeTopHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(mdls...)
 	userHdl.RegisterRoutes(server)
 	wechatHdl.RegisterRoutes(server)
 	artHdl.RegisterRoutes(server)
+	likeTopHdl.RegisterRoutes(server) // 6. like top handler callback
 	return server
 }
 
@@ -62,7 +62,7 @@ func InitGinMiddlewares(redisClient redis.Cmdable,
 		func(ctx *gin.Context) {
 			println("这是我的 Middleware")
 		},
-		ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
+		// ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
 		middleware.NewLogMiddlewareBuilder(func(ctx context.Context, al middleware.AccessLog) {
 			l.Debug("", logger.Field{Key: "req", Val: al})
 		}).AllowReqBody().AllowRespBody().Build(),

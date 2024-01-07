@@ -12,6 +12,6 @@ func TestGORMLikeTopNDAO_queryLikeNList(t *testing.T) {
 	g := &dao.GORMLikeTopNDAO{
 		Db: ioc.InitDB(ioc.InitLogger()),
 	}
-	list := g.QueryLikeNList(context.Background(), "article", 100)
+	list, _ := g.QueryLikeNList(context.Background(), "article", 100)
 	assert.NotEmpty(t, list)
 }

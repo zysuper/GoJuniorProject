@@ -14,19 +14,20 @@ type GORMLikeTopNDAO struct {
 	Db *gorm.DB
 }
 
-func NewGORMLikeTopNDAO(db *gorm.DB) *GORMLikeTopNDAO {
+func NewGORMLikeTopNDAO(db *gorm.DB) LikeTopNDAO {
 	return &GORMLikeTopNDAO{Db: db}
 }
 
-func (g *GORMLikeTopNDAO) QueryLikeNList(context context.Context, bizKey string, n int) []domain.TopLike {
+func (g *GORMLikeTopNDAO) QueryLikeNList(context context.Context, bizKey string, n int) ([]domain.TopLike, error) {
 	var results []domain.TopLike
-	g.Db.
+	error := g.Db.
 		WithContext(context).
-		Select("i.biz_id, i.like_cnt").
+		Select("i.biz_id as aid, i.like_cnt as like_count").
 		Table("interactives i").
 		Where(`i.biz = ?`, bizKey).
 		Order("i.like_cnt desc").
 		Limit(n).
-		Scan(&results)
-	return results
+		Scan(&results).
+		Error
+	return results, error
 }

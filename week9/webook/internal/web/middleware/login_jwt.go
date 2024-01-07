@@ -25,7 +25,8 @@ func (m *LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			path == "/users/login_sms/code/send" ||
 			path == "/users/login_sms" ||
 			path == "/oauth2/wechat/authurl" ||
-			path == "/oauth2/wechat/callback" {
+			path == "/oauth2/wechat/callback" ||
+			path == "/likeTop100" {
 			// 不需要登录校验
 			return
 		}

@@ -9,6 +9,7 @@ import (
 
 type TopNRepository interface {
 	GetTopLikeN(context context.Context, bizKey string, size int) ([]domain.TopLike, error)
+	// UpdateLike(context context.Context, bizKey string, like domain.TopLike) error
 }
 
 type CachedTopNServiceRepository struct {
@@ -20,13 +21,14 @@ func NewCachedTopNServiceRepository(dao dao.LikeTopNDAO, cache cache.LikeTopCach
 	return &CachedTopNServiceRepository{dao: dao, cache: cache}
 }
 
-func (c *CachedTopNServiceRepository) GetTopLikeN(context context.Context, bizKey string, size int) ([]domain.TopLike, error) {
-	l, error := c.cache.GetTopLikeN(context, bizKey, size)
-	if error == nil {
+func (c *CachedTopNServiceRepository) GetTopLikeN(cxt context.Context, bizKey string, size int) ([]domain.TopLike, error) {
+	l, error := c.cache.GetTopLikeN(cxt, bizKey, size)
+
+	if error == nil && l != nil {
 		return l, nil
 	}
 
-	list, error := c.dao.QueryLikeNList(context, bizKey, size)
+	list, error := c.dao.QueryLikeNList(cxt, bizKey, size)
 
 	if error != nil {
 		return []domain.TopLike{}, error

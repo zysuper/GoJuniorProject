@@ -32,6 +32,14 @@ var articlSvcProvider = wire.NewSet(
 	dao.NewArticleGORMDAO,
 	service.NewArticleService)
 
+var likeTopProvider = wire.NewSet(
+	dao.NewGORMLikeTopNDAO,
+	cache.NewRedisLikeTopCache,
+	repository.NewCachedTopNServiceRepository,
+	service.NewDefaultTopNService,
+	web.NewLikeTopHandler,
+)
+
 var interactiveSvcSet = wire.NewSet(dao.NewGORMInteractiveDAO,
 	cache.NewInteractiveRedisCache,
 	repository.NewCachedInteractiveRepository,
@@ -44,6 +52,7 @@ func InitWebServer() *gin.Engine {
 		userSvcProvider,
 		articlSvcProvider,
 		interactiveSvcSet,
+		likeTopProvider,
 		// cache 部分
 		cache.NewCodeCache,
 

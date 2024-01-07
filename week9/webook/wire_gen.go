@@ -45,15 +45,20 @@ func InitWebServer() *gin.Engine {
 	articleService := service.NewArticleService(articleRepository)
 	interactiveDAO := dao.NewGORMInteractiveDAO(db)
 	interactiveCache := cache.NewInteractiveRedisCache(cmdable)
-	interactiveRepository := repository.NewCachedInteractiveRepository(interactiveDAO, interactiveCache)
+	likeTopCache := cache.NewRedisLikeTopCache(cmdable)
+	interactiveRepository := repository.NewProxyLikeTopCachedInteractiveRepository(interactiveDAO, interactiveCache, likeTopCache)
 	interactiveService := service.NewInteractiveService(interactiveRepository)
 	articleHandler := web.NewArticleHandler(loggerV1, articleService, interactiveService)
 	wechatService := ioc.InitWechatService(loggerV1)
 	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, handler, userService)
-	engine := ioc.InitWebServer(v, userHandler, articleHandler, oAuth2WechatHandler)
+	likeTopNDAO := dao.NewGORMLikeTopNDAO(db)
+	topNRepository := repository.NewCachedTopNServiceRepository(likeTopNDAO, likeTopCache)
+	topNService := service.NewDefaultTopNService(topNRepository)
+	likeTopHandler := web.NewLikeTopHandler(topNService)
+	engine := ioc.InitWebServer(v, userHandler, articleHandler, oAuth2WechatHandler, likeTopHandler)
 	return engine
 }
 
 // wire.go:
 
-var interactiveSvcSet = wire.NewSet(dao.NewGORMInteractiveDAO, cache.NewInteractiveRedisCache, repository.NewCachedInteractiveRepository, service.NewInteractiveService)
+var interactiveSvcSet = wire.NewSet(dao.NewGORMInteractiveDAO, cache.NewInteractiveRedisCache, repository.NewProxyLikeTopCachedInteractiveRepository, service.NewInteractiveService)
