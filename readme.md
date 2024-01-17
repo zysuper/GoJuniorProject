@@ -7,4 +7,4 @@
 * [第五周作业链接](./week5/readme.md)
 * [第六周作业链接](./week6/readme.md)
 * [第九周第七次作业链接](./week9/README.md)
-* [第十周第八次作业链接](./week10/readme.md)
+* [第十周第八次作业链接](./week10/README.md)
