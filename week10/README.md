@@ -19,6 +19,8 @@
 
 增加一个当前尚未消费消息的 `Gauge` 度量，来指示当前 Topic 是否存在消费积压。
 
+设置告警方式： 一段时间内，如果 gauge 持续在某个预设置之上，就可能存在消费不及时的情况。
+
 ## 压测指标
 
 ![image-20240117142549820](./assets/image-20240117142549820.png)
@@ -27,5 +29,8 @@
 
 ## 代码快捷跳转
 
+1. [gauge 构造器](./webook/internal/events/article/prometheus/gauge.go)
+2. [producer增加 gauge 计数(代码第48行)](./webook/internal/events/article/producer.go)
+3. [consumer减少 gauge 计数(代码第54行)](./webook/pkg/samarax/handler.go)
 
 
