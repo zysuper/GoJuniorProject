@@ -24,6 +24,9 @@ services:
     image: openzipkin/zipkin-slim:2.24
     ports:
       - '9411:9411'
+    environment:
+      - JAVA_OPTS=-Xms128m -Xmx128m -XX:+ExitOnOutOfMemoryError
+
   redis:
     image: "redis:latest"
     restart: always

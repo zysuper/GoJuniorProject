@@ -5,16 +5,19 @@ import (
 	"encoding/json"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/IBM/sarama"
+	"github.com/prometheus/client_golang/prometheus"
 	"time"
 )
 
 type BatchHandler[T any] struct {
 	fn func(msgs []*sarama.ConsumerMessage, ts []T) error
 	l  logger.LoggerV1
+	g  prometheus.Gauge
 }
 
-func NewBatchHandler[T any](l logger.LoggerV1, fn func(msgs []*sarama.ConsumerMessage, ts []T) error) *BatchHandler[T] {
-	return &BatchHandler[T]{fn: fn, l: l}
+func NewBatchHandler[T any](l logger.LoggerV1,
+	fn func(msgs []*sarama.ConsumerMessage, ts []T) error, g prometheus.Gauge) *BatchHandler[T] {
+	return &BatchHandler[T]{fn: fn, l: l, g: g}
 }
 
 func (b *BatchHandler[T]) Setup(session sarama.ConsumerGroupSession) error {
@@ -68,6 +71,7 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		}
 		for _, msg := range batch {
 			session.MarkMessage(msg, "")
+			b.g.Dec()
 		}
 	}
 }

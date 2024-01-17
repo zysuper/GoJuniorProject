@@ -20,6 +20,22 @@ func NewInteractiveReadEventConsumer(repo repository.InteractiveRepository,
 	return &InteractiveReadEventConsumer{repo: repo, client: client, l: l}
 }
 
+func (i *InteractiveReadEventConsumer) StartBatch() error {
+	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
+	if err != nil {
+		return err
+	}
+	go func() {
+		er := cg.Consume(context.Background(),
+			[]string{TopicReadEvent},
+			samarax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume, gauge))
+		if er != nil {
+			i.l.Error("退出消费", logger.Error(er))
+		}
+	}()
+	return err
+}
+
 func (i *InteractiveReadEventConsumer) Start() error {
 	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
 	if err != nil {
@@ -28,23 +44,7 @@ func (i *InteractiveReadEventConsumer) Start() error {
 	go func() {
 		er := cg.Consume(context.Background(),
 			[]string{TopicReadEvent},
-			samarax.NewBatchHandler[ReadEvent](i.l, i.BatchConsume))
-		if er != nil {
-			i.l.Error("退出消费", logger.Error(er))
-		}
-	}()
-	return err
-}
-
-func (i *InteractiveReadEventConsumer) StartV1() error {
-	cg, err := sarama.NewConsumerGroupFromClient("interactive", i.client)
-	if err != nil {
-		return err
-	}
-	go func() {
-		er := cg.Consume(context.Background(),
-			[]string{TopicReadEvent},
-			samarax.NewHandler[ReadEvent](i.l, i.Consume))
+			samarax.NewHandler[ReadEvent](i.l, i.Consume, gauge))
 		if er != nil {
 			i.l.Error("退出消费", logger.Error(er))
 		}

@@ -24,7 +24,7 @@ func (i *HistoryRecordConsumer) Start() error {
 	go func() {
 		er := cg.Consume(context.Background(),
 			[]string{TopicReadEvent},
-			samarax.NewHandler[ReadEvent](i.l, i.Consume))
+			samarax.NewHandler[ReadEvent](i.l, i.Consume, gauge))
 		if er != nil {
 			i.l.Error("退出消费", logger.Error(er))
 		}

@@ -13,12 +13,14 @@ function Page(){
     const artID = params?.get("id")!
     useEffect(() => {
         setLoading(true)
-        axios.get('/articles/pub/'+artID)
-            .then((res) => res.data)
-            .then((data) => {
-                setData(data.data)
-                setLoading(false)
-            })
+        if(artID) {
+            axios.get('/articles/pub/' + artID)
+                .then((res) => res.data)
+                .then((data) => {
+                    setData(data.data)
+                    setLoading(false)
+                })
+        }
     }, [artID])
 
     if (isLoading) return <p>Loading...</p>

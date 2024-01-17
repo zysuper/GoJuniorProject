@@ -2,7 +2,9 @@ package article
 
 import (
 	"encoding/json"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/IBM/sarama"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const TopicReadEvent = "article_read"
@@ -23,10 +25,12 @@ type BatchReadEvent struct {
 
 type SaramaSyncProducer struct {
 	producer sarama.SyncProducer
+	g        prometheus.Gauge
+	l        logger.LoggerV1
 }
 
-func NewSaramaSyncProducer(producer sarama.SyncProducer) Producer {
-	return &SaramaSyncProducer{producer: producer}
+func NewSaramaSyncProducer(producer sarama.SyncProducer, l logger.LoggerV1) Producer {
+	return &SaramaSyncProducer{producer: producer, g: gauge, l: l}
 }
 
 func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
@@ -38,5 +42,10 @@ func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
 		Topic: TopicReadEvent,
 		Value: sarama.StringEncoder(val),
 	})
+
+	if err == nil {
+		//s.l.Info("Producer Success.")
+		s.g.Inc()
+	}
 	return err
 }
