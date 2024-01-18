@@ -46,7 +46,7 @@ func (b *BatchHandler[T]) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 					cancel()
 					return nil
 				}
-				batch = append(batch, msg)
+				// batch = append(batch, msg)
 				var t T
 				err := json.Unmarshal(msg.Value, &t)
 				if err != nil {
