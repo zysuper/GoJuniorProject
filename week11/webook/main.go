@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// 因为你没有传入 -tags=wireinject, 所以你最终用的是 wire_gen 中的定义。
 func main() {
 	initViperV1()
 	initLogger()
@@ -33,6 +34,11 @@ func main() {
 			panic(err)
 		}
 	}
+	app.cron.Start()
+	defer func() {
+		// 等待定时任务退出
+		<-app.cron.Stop().Done()
+	}()
 	server := app.server
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello，启动成功了！")
