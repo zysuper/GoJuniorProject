@@ -15,10 +15,14 @@ type JobDAO interface {
 
 type GORMJobDAO struct {
 	db *gorm.DB
+	// 续约周期.
+	refreshInterval time.Duration
+	// 续约失败周期倍率.
+	rate int64
 }
 
 func NewGORMJobDAO(db *gorm.DB) JobDAO {
-	return &GORMJobDAO{db: db}
+	return &GORMJobDAO{db: db, refreshInterval: time.Minute, rate: 2}
 }
 
 func (dao *GORMJobDAO) Preempt(ctx context.Context) (Job, error) {
@@ -27,8 +31,8 @@ func (dao *GORMJobDAO) Preempt(ctx context.Context) (Job, error) {
 		var j Job
 		now := time.Now().UnixMilli()
 		// 作业：这里是缺少找到续约失败的 JOB 出来执行
-		err := db.Where("status = ? AND next_time <?",
-			jobStatusWaiting, now).
+		err := db.Where("(next_time <? AND status = ?) or (utime <? and status = 1)",
+			now, jobStatusWaiting, dao.checkRefreshInterval(now)).
 			First(&j).Error
 		if err != nil {
 			return j, err
@@ -49,6 +53,11 @@ func (dao *GORMJobDAO) Preempt(ctx context.Context) (Job, error) {
 		}
 		return j, err
 	}
+}
+
+func (dao *GORMJobDAO) checkRefreshInterval(now int64) int64 {
+	// dao.rate 倍时间的续约周期，都没有被续约，说明获取锁的那支程序挂了.
+	return now - dao.refreshInterval.Milliseconds()*dao.rate
 }
 
 func (dao *GORMJobDAO) Release(ctx context.Context, jid int64) error {
