@@ -41,4 +41,4 @@
 
 ## 解答
 
-[代码 34 行](./webook/internal/repository/dao/job.go)
+[代码 34 行](./webook/internal/repository/dao/job.go#L34)

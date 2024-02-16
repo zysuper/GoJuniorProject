@@ -29,8 +29,8 @@
 
 ## 代码快捷跳转
 
-1. [gauge 构造器](./webook/internal/events/article/prometheus/gauge.go)
-2. [producer增加 gauge 计数(代码第48行)](./webook/internal/events/article/producer.go)
-3. [consumer减少 gauge 计数(代码第54行)](./webook/pkg/samarax/handler.go)
+1. [gauge 构造器](./webook/internal/events/article/prometheus/gauge.go#L5)
+2. [producer增加 gauge 计数(代码第48行)](./webook/internal/events/article/producer.go#L48)
+3. [consumer减少 gauge 计数(代码第54行)](./webook/pkg/samarax/handler.go#L54)
 
 
