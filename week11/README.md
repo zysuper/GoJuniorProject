@@ -37,7 +37,7 @@
 
 现在需要你修改下面代码中的查询条件，支持第二种情况。
 
-![img](https://static001.infoq.cn/resource/image/35/5a/358501d3679af41480bd10013bded65a.png)
+![img](./assets/image1.webp)
 
 ## 解答
 
