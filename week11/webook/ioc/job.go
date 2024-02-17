@@ -2,6 +2,7 @@ package ioc
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/job"
+	"gitee.com/geekbang/basic-go/webook/internal/loaddecider"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	rlock "github.com/gotomicro/redis-lock"
@@ -10,8 +11,8 @@ import (
 	"time"
 )
 
-func InitRankingJob(svc service.RankingService, client *rlock.Client, l logger.LoggerV1) *job.RankingJob {
-	return job.NewRankingJob(svc, l, client, time.Second*30)
+func InitRankingJob(svc service.RankingService, client *rlock.Client, decider loaddecider.Decider, l logger.LoggerV1) *job.RankingJob {
+	return job.NewRankingJob(svc, l, client, decider, time.Second*30)
 }
 
 func InitJobs(l logger.LoggerV1, rjob *job.RankingJob) *cron.Cron {

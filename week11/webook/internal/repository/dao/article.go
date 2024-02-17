@@ -31,7 +31,7 @@ func (a *ArticleGORMDAO) ListPub(ctx context.Context, start time.Time, offset in
 		Where("utime < ? AND status = ?",
 			start.UnixMilli(), ArticleStatusPublished).
 		Offset(offset).Limit(limit).
-		First(&res).Error
+		Find(&res).Error
 	return res, err
 }
 

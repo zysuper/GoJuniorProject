@@ -32,6 +32,7 @@ func (dao *GORMJobDAO) Preempt(ctx context.Context) (Job, error) {
 		var j Job
 		now := time.Now().UnixMilli()
 		// 作业：这里是缺少找到续约失败的 JOB 出来执行
+		// `没人抢`或者是 被标记为 `jobStatusRunning` 状态，但是很久没被续约 `utime` 了.
 		err := db.Where("(next_time <? AND status = ?) or (utime <? and status = 1)",
 			now, jobStatusWaiting, dao.checkRefreshInterval(now)).
 			First(&j).Error

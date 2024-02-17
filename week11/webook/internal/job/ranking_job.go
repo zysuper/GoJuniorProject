@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"gitee.com/geekbang/basic-go/webook/internal/loaddecider"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	rlock "github.com/gotomicro/redis-lock"
@@ -21,19 +22,21 @@ type RankingJob struct {
 
 	// 作业提示
 	// 随机生成一个，就代表当前负载。你可以每隔一分钟生成一个
-	load int32
+	decider loaddecider.Decider
 }
 
 func NewRankingJob(
 	svc service.RankingService,
 	l logger.LoggerV1,
 	client *rlock.Client,
+	decider loaddecider.Decider,
 	timeout time.Duration) *RankingJob {
 	return &RankingJob{svc: svc,
 		key:       "job:ranking",
 		l:         l,
 		client:    client,
 		localLock: &sync.Mutex{},
+		decider:   decider,
 		timeout:   timeout}
 }
 
@@ -44,6 +47,35 @@ func (r *RankingJob) Name() string {
 // go fun() { r.Run()}
 
 func (r *RankingJob) Run() error {
+	cxt, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	// 如果负载比拼胜出
+	if r.decider.IsVictory(cxt) {
+		return r.doRun()
+	} else {
+		// 如果没有胜出，且有持有分布式锁，需要主动释放.
+		r.localLock.Lock()
+		defer r.localLock.Unlock()
+
+		lock := r.lock
+		if lock != nil {
+			ctx2, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			// 释放分布式锁.
+			err := lock.Unlock(ctx2)
+			r.lock = nil
+
+			if err != nil {
+				r.l.Error("释放分布式锁失败", logger.Error(err))
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *RankingJob) doRun() error {
 	r.localLock.Lock()
 	lock := r.lock
 	if lock == nil {

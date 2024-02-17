@@ -4,6 +4,7 @@ package main
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/events/article"
+	"gitee.com/geekbang/basic-go/webook/internal/loaddecider"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -12,6 +13,13 @@ import (
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
 	"github.com/google/wire"
+)
+
+var deciderSet = wire.NewSet(
+	loaddecider.NewRedisZSetReporter,
+	ioc.NewIdentity,
+	loaddecider.NewDefaultLoadGauge,
+	loaddecider.NewRedisZSetDecider,
 )
 
 var interactiveSvcSet = wire.NewSet(dao.NewGORMInteractiveDAO,
@@ -40,6 +48,7 @@ func InitWebServer() *App {
 
 		interactiveSvcSet,
 		rankingSvcSet,
+		deciderSet,
 		ioc.InitJobs,
 		ioc.InitRankingJob,
 
