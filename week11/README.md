@@ -22,6 +22,32 @@
 
 ## 解答
 
+### 实现思路
+
+1. 使用 redis 的 zset 记录各个节点的负载信息， score 是负载， member 是服务的唯一标识，比如 ip+port
+2. 同时用 redis 服务用唯一标识建立一个带 `EXPIRE` 时间的 key
+3. go 启动一个 goroutine 定时更新 1,2 的记录
+4. 如果 2 建立的 key 失效了，说明节点很久没有上报负载数据了，需要被剔除
+5. 当调度执行时，先获取负载排名中最低的那一个服务器的唯一标识
+6. 如果这个唯一标识在 2 中建立的 key 过期了，则主动清理 zset 的那个key 的数据
+7. 如果没有过期，且该唯一标识和当前服务的唯一标识相同，则执行 ranking 的正常流程
+8. 如果唯一标识和当前服务的唯一标识不同，则看看当前服务是否持有锁，如果持有，则立即释放
+
+### 实现思路图解
+
+![image-20240217202000010](./assets/image-20240217202000010.png)
+
+![image-20240217202117865](./assets/image-20240217202117865.png)
+
+![image-20240217202159534](./assets/image-20240217202159534.png)
+
+### 代码快捷连接
+
+[快速跳转 -> 服务唯一标识器实现](./webook/internal/loaddecider/server_identity.go)
+[快速跳转 -> 负载指标收集器实现](./webook/internal/loaddecider/load_gauge.go)
+[快速跳转 -> 负载信息上报器实现](./webook/internal/loaddecider/load_reporter.go)
+[快速跳转 -> 低负载决策器实现](./webook/internal/loaddecider/decider.go)
+
 # 第十一周第十次作业
 
 **抢占接口的查询条件**
