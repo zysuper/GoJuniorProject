@@ -67,4 +67,4 @@
 
 ## 解答
 
-[快速跳转 -> 代码 34 行](./webook/internal/repository/dao/job.go#L36)
+[快速跳转 -> 代码 36 行](./webook/internal/repository/dao/job.go#L36)
