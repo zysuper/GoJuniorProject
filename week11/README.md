@@ -43,10 +43,10 @@
 
 ### 代码快捷连接
 
-[快速跳转 -> 服务唯一标识器实现](./webook/internal/loaddecider/server_identity.go)
-[快速跳转 -> 负载指标收集器实现](./webook/internal/loaddecider/load_gauge.go)
-[快速跳转 -> 负载信息上报器实现](./webook/internal/loaddecider/load_reporter.go)
-[快速跳转 -> 低负载决策器实现](./webook/internal/loaddecider/decider.go)
+1. [快速跳转 -> 服务唯一标识器实现](./webook/internal/loaddecider/server_identity.go)
+2. [快速跳转 -> 负载指标收集器实现](./webook/internal/loaddecider/load_gauge.go)
+3. [快速跳转 -> 负载信息上报器实现](./webook/internal/loaddecider/load_reporter.go)
+4. [快速跳转 -> 低负载决策器实现](./webook/internal/loaddecider/decider.go)
 
 # 第十一周第十次作业
 
