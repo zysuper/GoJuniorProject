@@ -20,9 +20,9 @@ web Handler -> ArticleService -> ArticleRepository -> IntrRepository
 ### 快速跳转
 
 1. [repository/IntrRepository.go](./webook/internal/repository/IntrRepository.go)
-1. [repository/ArticleRepository.go](./webook/internal/repository/article.go)
-1. [service/article.go](./webook/internal/service/article.go)
+1. [repository/ArticleRepository.go](./webook/internal/repository/article.go#L27)
+1. [service/article.go](./webook/internal/service/article.go#26)
 1. [web/article.go](./webook/internal/web/article.go)
-1. [wire.go](./webook/wire.go)
+1. [wire.go](./webook/wire.go#47)
 
 
