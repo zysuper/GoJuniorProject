@@ -34,7 +34,6 @@ type articleService struct {
 	producer article.Producer
 
 	userRepo repository.UserRepository
-	intrRepo repository.IntrRepository
 
 	// V1 写法专用
 	readerRepo repository.ArticleReaderRepository
@@ -43,19 +42,19 @@ type articleService struct {
 }
 
 func (a *articleService) Get(ctx *gin.Context, i *intrv1.GetRequest) (*intrv1.GetResponse, error) {
-	return a.intrRepo.Get(ctx, i)
+	return a.repo.Get(ctx, i)
 }
 
 func (a *articleService) Like(c *gin.Context, i *intrv1.LikeRequest) (*intrv1.LikeResponse, error) {
-	return a.intrRepo.Like(c, i)
+	return a.repo.Like(c, i)
 }
 
 func (a *articleService) CancelLike(c *gin.Context, i *intrv1.CancelLikeRequest) (*intrv1.CancelLikeResponse, error) {
-	return a.intrRepo.CancelLike(c, i)
+	return a.repo.CancelLike(c, i)
 }
 
 func (a *articleService) Collect(ctx *gin.Context, i *intrv1.CollectRequest) (*intrv1.CollectResponse, error) {
-	return a.intrRepo.Collect(ctx, i)
+	return a.repo.Collect(ctx, i)
 }
 
 func (a *articleService) ListPub(ctx context.Context,
@@ -153,11 +152,10 @@ func NewArticleServiceV1(
 	}
 }
 
-func NewArticleService(repo repository.ArticleRepository, intrRepo repository.IntrRepository,
+func NewArticleService(repo repository.ArticleRepository,
 	producer article.Producer) ArticleService {
 	return &articleService{
 		repo:     repo,
-		intrRepo: intrRepo,
 		producer: producer,
 	}
 }

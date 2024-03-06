@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"github.com/ecodeclub/ekit/slice"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"time"
 )
@@ -20,6 +22,12 @@ type ArticleRepository interface {
 	GetById(ctx context.Context, id int64) (domain.Article, error)
 	GetPubById(ctx context.Context, id int64) (domain.Article, error)
 	ListPub(ctx context.Context, start time.Time, offset int, limit int) ([]domain.Article, error)
+
+	// interactive request.
+	Get(ctx *gin.Context, i *intrv1.GetRequest) (*intrv1.GetResponse, error)
+	Like(c *gin.Context, i *intrv1.LikeRequest) (*intrv1.LikeResponse, error)
+	CancelLike(c *gin.Context, i *intrv1.CancelLikeRequest) (*intrv1.CancelLikeResponse, error)
+	Collect(ctx *gin.Context, i *intrv1.CollectRequest) (*intrv1.CollectResponse, error)
 }
 
 type CachedArticleRepository struct {
@@ -28,11 +36,28 @@ type CachedArticleRepository struct {
 	// 因为如果你直接访问 UserDAO，你就绕开了 repository，
 	// repository 一般都有一些缓存机制
 	userRepo UserRepository
+	intRepo  IntrRepository
 
 	readerDAO dao.ArticleReaderDAO
 	authorDAO dao.ArticleAuthorDAO
 
 	db *gorm.DB
+}
+
+func (c *CachedArticleRepository) Get(ctx *gin.Context, i *intrv1.GetRequest) (*intrv1.GetResponse, error) {
+	return c.intRepo.Get(ctx, i)
+}
+
+func (c *CachedArticleRepository) Like(ctx *gin.Context, i *intrv1.LikeRequest) (*intrv1.LikeResponse, error) {
+	return c.intRepo.Like(ctx, i)
+}
+
+func (c *CachedArticleRepository) CancelLike(ctx *gin.Context, i *intrv1.CancelLikeRequest) (*intrv1.CancelLikeResponse, error) {
+	return c.intRepo.CancelLike(ctx, i)
+}
+
+func (c *CachedArticleRepository) Collect(ctx *gin.Context, i *intrv1.CollectRequest) (*intrv1.CollectResponse, error) {
+	return c.intRepo.Collect(ctx, i)
 }
 
 func (c *CachedArticleRepository) ListPub(ctx context.Context, start time.Time, offset int, limit int) ([]domain.Article, error) {
@@ -253,11 +278,13 @@ func (c *CachedArticleRepository) Create(ctx context.Context, art domain.Article
 
 func NewCachedArticleRepository(dao dao.ArticleDAO,
 	userRepo UserRepository,
+	intRepo IntrRepository,
 	cache cache.ArticleCache) ArticleRepository {
 	return &CachedArticleRepository{
 		dao:      dao,
 		cache:    cache,
 		userRepo: userRepo,
+		intRepo:  intRepo,
 	}
 }
 
