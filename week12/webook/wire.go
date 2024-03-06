@@ -61,6 +61,7 @@ func InitWebServer() *App {
 		repository.NewCachedUserRepository,
 		repository.NewCodeRepository,
 		repository.NewCachedArticleRepository,
+		repository.NewIntrRepository,
 
 		// Service 部分
 		ioc.InitSMSService,

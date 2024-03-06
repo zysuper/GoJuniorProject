@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+	intrv1 "gitee.com/geekbang/basic-go/webook/api/proto/gen/intr/v1"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"github.com/gin-gonic/gin"
 	"time"
 )
 
@@ -19,6 +21,12 @@ type ArticleService interface {
 	GetById(ctx context.Context, id int64) (domain.Article, error)
 	GetPubById(ctx context.Context, id, uid int64) (domain.Article, error)
 	ListPub(ctx context.Context, start time.Time, offset, limit int) ([]domain.Article, error)
+
+	// interactive request.
+	Get(ctx *gin.Context, i *intrv1.GetRequest) (*intrv1.GetResponse, error)
+	Like(c *gin.Context, i *intrv1.LikeRequest) (*intrv1.LikeResponse, error)
+	CancelLike(c *gin.Context, i *intrv1.CancelLikeRequest) (*intrv1.CancelLikeResponse, error)
+	Collect(ctx *gin.Context, i *intrv1.CollectRequest) (*intrv1.CollectResponse, error)
 }
 
 type articleService struct {
@@ -26,11 +34,28 @@ type articleService struct {
 	producer article.Producer
 
 	userRepo repository.UserRepository
+	intrRepo repository.IntrRepository
 
 	// V1 写法专用
 	readerRepo repository.ArticleReaderRepository
 	authorRepo repository.ArticleAuthorRepository
 	l          logger.LoggerV1
+}
+
+func (a *articleService) Get(ctx *gin.Context, i *intrv1.GetRequest) (*intrv1.GetResponse, error) {
+	return a.intrRepo.Get(ctx, i)
+}
+
+func (a *articleService) Like(c *gin.Context, i *intrv1.LikeRequest) (*intrv1.LikeResponse, error) {
+	return a.intrRepo.Like(c, i)
+}
+
+func (a *articleService) CancelLike(c *gin.Context, i *intrv1.CancelLikeRequest) (*intrv1.CancelLikeResponse, error) {
+	return a.intrRepo.CancelLike(c, i)
+}
+
+func (a *articleService) Collect(ctx *gin.Context, i *intrv1.CollectRequest) (*intrv1.CollectResponse, error) {
+	return a.intrRepo.Collect(ctx, i)
 }
 
 func (a *articleService) ListPub(ctx context.Context,
@@ -128,10 +153,11 @@ func NewArticleServiceV1(
 	}
 }
 
-func NewArticleService(repo repository.ArticleRepository,
+func NewArticleService(repo repository.ArticleRepository, intrRepo repository.IntrRepository,
 	producer article.Producer) ArticleService {
 	return &articleService{
 		repo:     repo,
+		intrRepo: intrRepo,
 		producer: producer,
 	}
 }

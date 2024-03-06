@@ -17,20 +17,17 @@ import (
 )
 
 type ArticleHandler struct {
-	svc     service.ArticleService
-	intrSvc intrv1.InteractiveServiceClient
-	l       logger.LoggerV1
-	biz     string
+	svc service.ArticleService
+	l   logger.LoggerV1
+	biz string
 }
 
 func NewArticleHandler(l logger.LoggerV1,
-	svc service.ArticleService,
-	intrSvc intrv1.InteractiveServiceClient) *ArticleHandler {
+	svc service.ArticleService) *ArticleHandler {
 	return &ArticleHandler{
-		l:       l,
-		svc:     svc,
-		intrSvc: intrSvc,
-		biz:     "article",
+		l:   l,
+		svc: svc,
+		biz: "article",
 	}
 }
 
@@ -238,7 +235,7 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 	})
 	eg.Go(func() error {
 		var er error
-		intr, er = h.intrSvc.Get(ctx, &intrv1.GetRequest{
+		intr, er = h.svc.Get(ctx, &intrv1.GetRequest{
 			Biz: h.biz, BizId: id, Uid: uc.Uid,
 		})
 		return er
@@ -297,12 +294,12 @@ func (h *ArticleHandler) Like(c *gin.Context,
 	var err error
 	if req.Like {
 		// 点赞
-		_, err = h.intrSvc.Like(c, &intrv1.LikeRequest{
+		_, err = h.svc.Like(c, &intrv1.LikeRequest{
 			Biz: h.biz, BizId: req.Id, Uid: uc.Uid,
 		})
 	} else {
 		// 取消点赞
-		_, err = h.intrSvc.CancelLike(c, &intrv1.CancelLikeRequest{
+		_, err = h.svc.CancelLike(c, &intrv1.CancelLikeRequest{
 			Biz: h.biz, BizId: req.Id, Uid: uc.Uid,
 		})
 	}
@@ -318,7 +315,7 @@ func (h *ArticleHandler) Like(c *gin.Context,
 
 func (h *ArticleHandler) Collect(ctx *gin.Context,
 	req ArticleCollectReq, uc jwt.UserClaims) (ginx.Result, error) {
-	_, err := h.intrSvc.Collect(ctx, &intrv1.CollectRequest{
+	_, err := h.svc.Collect(ctx, &intrv1.CollectRequest{
 		Biz: h.biz, BizId: req.Id, Uid: uc.Uid, Cid: req.Cid,
 	})
 	if err != nil {
