@@ -13,5 +13,16 @@
 
 ## 实现
 
+使用 gozero 来连接 consul 注册中心。
+zero-contrib 有 consul 的 grpc `resolver` 实现。
+
+![image-20240316232619599](./assets/image-20240316232619599.png)
+
+![image-20240316232742928](./assets/image-20240316232742928.png)
+
+![image-20240316232830806](./assets/image-20240316232830806.png)
+
+
 ### 快速跳转
 
+[代码快速跳转](./grpc/go_zero_consul_test.go)
