@@ -32,7 +32,7 @@ type BatchRankingService struct {
 }
 
 func NewBatchRankingService(intrSvc intrv1.InteractiveServiceClient,
-	artSvc ArticleService) RankingService {
+	artSvc ArticleService, rr repository.RankingRepository) RankingService {
 	return &BatchRankingService{
 		intrSvc:   intrSvc,
 		artSvc:    artSvc,
@@ -43,6 +43,7 @@ func NewBatchRankingService(intrSvc intrv1.InteractiveServiceClient,
 			duration := time.Since(utime).Seconds()
 			return float64(likeCnt-1) / math.Pow(duration+2, 1.5)
 		},
+		repo: rr,
 	}
 }
 

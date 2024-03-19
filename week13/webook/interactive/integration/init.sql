@@ -1,5 +1,5 @@
-create database if not exists webook;
-create table if not exists webook.interactives
+create database if not exists webook_intr;
+create table if not exists webook_intr.interactives
 (
     id          bigint auto_increment
         primary key,
@@ -14,7 +14,7 @@ create table if not exists webook.interactives
         unique (biz_id, biz)
 );
 
-create table if not exists webook.user_collection_bizs
+create table if not exists webook_intr.user_collection_bizs
 (
     id     bigint auto_increment
         primary key,
@@ -29,9 +29,9 @@ create table if not exists webook.user_collection_bizs
 );
 
 create index idx_user_collection_bizs_cid
-    on webook.user_collection_bizs (cid);
+    on webook_intr.user_collection_bizs (cid);
 
-create table if not exists webook.user_like_bizs
+create table if not exists webook_intr.user_like_bizs
 (
     id     bigint auto_increment
         primary key,
