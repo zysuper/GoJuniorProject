@@ -8,6 +8,8 @@ import (
 	"github.com/ecodeclub/ekit/slice"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,7 +26,7 @@ type Validator[T migrator.Entity] struct {
 	// <= 0 就认为中断
 	// > 0 就认为睡眠
 	sleepInterval time.Duration
-	fromBase      func(ctx context.Context, offset int) (T, error)
+	fromBase      func(ctx context.Context, offset int) ([]T, error)
 }
 
 func NewValidator[T migrator.Entity](
@@ -59,52 +61,77 @@ func (v *Validator[T]) Validate(ctx context.Context) error {
 func (v *Validator[T]) validateBaseToTarget(ctx context.Context) error {
 	offset := 0
 	for {
-		src, err := v.fromBase(ctx, offset)
+		sources, err := v.fromBase(ctx, offset)
+		// 超时或者取消了
 		if err == context.DeadlineExceeded || err == context.Canceled {
 			return nil
 		}
-		if err == gorm.ErrRecordNotFound {
-			// 你增量校验，要考虑一直运行的
-			// 这个就是咩有数据
+
+		// 如果全部处理完了
+		if err == nil && len(sources) == 0 {
 			if v.sleepInterval <= 0 {
 				return nil
 			}
 			time.Sleep(v.sleepInterval)
 			continue
 		}
+
 		if err != nil {
-			// 查询出错了
+			// 查询出错了,这批都不处理了，下一批.
 			v.l.Error("base -> target 查询 base 失败", logger.Error(err))
-			// 在这里，
-			offset++
+			offset += v.batchSize
 			continue
 		}
 
-		// 这边就是正常情况
-		var dst T
-		err = v.target.WithContext(ctx).
-			Where("id = ?", src.ID()).
-			First(&dst).Error
-		switch err {
-		case gorm.ErrRecordNotFound:
-			// target 没有
-			// 丢一条消息到 Kafka 上
-			v.notify(src.ID(), events.InconsistentEventTypeTargetMissing)
-		case nil:
-			equal := src.CompareTo(dst)
+		v.validateTargetBatch(ctx, sources)
+		offset += v.batchSize
+	}
+}
+
+func (v *Validator[T]) validateTargetBatch(ctx context.Context, sources []T) error {
+	var dst []T
+
+	// 直接使用 in (IDS) 来一次查询出来.
+	ids := slice.Map(sources, func(idx int, src T) int64 { return src.ID() })
+
+	err := v.target.WithContext(ctx).
+		Where("id in ?", ids).
+		Find(&dst).Error
+
+	if err != nil {
+		ids_str := slice.Map(ids[:10], func(idx int, src int64) string {
+			return strconv.FormatInt(src, 10)
+		})
+
+		v.l.Error("target 查询失败",
+			logger.String("ids",
+				// 省略太长的 ids.
+				strings.Join(ids_str, ",")+" ..."),
+			logger.Error(err))
+		return err
+	}
+
+	// 创建 Map[ID]T， 方便和 src 数据的 ID 来查询比较对象。
+	var targetIdxMap map[int64]T
+	for _, d := range dst {
+		targetIdxMap[d.ID()] = d
+	}
+
+	for idx, id := range ids {
+		// 目标库能查询到时，需要真比较.
+		if dst, ok := targetIdxMap[id]; ok {
+			equal := sources[idx].CompareTo(dst)
 			if !equal {
 				// 要丢一条消息到 Kafka 上
-				v.notify(src.ID(), events.InconsistentEventTypeNEQ)
+				v.notify(sources[idx].ID(), events.InconsistentEventTypeNEQ)
 			}
-		default:
-			// 记录日志，然后继续
-			// 做好监控
-			v.l.Error("base -> target 查询 target 失败",
-				logger.Int64("id", src.ID()),
-				logger.Error(err))
+		} else {
+			// 目标库查询不到，直接就是缺一条.
+			v.notify(sources[idx].ID(), events.InconsistentEventTypeTargetMissing)
 		}
-		offset++
 	}
+
+	return nil
 }
 
 func (v *Validator[T]) Full() *Validator[T] {
@@ -127,23 +154,27 @@ func (v *Validator[T]) SleepInterval(interval time.Duration) *Validator[T] {
 	return v
 }
 
-func (v *Validator[T]) fullFromBase(ctx context.Context, offset int) (T, error) {
+func (v *Validator[T]) fullFromBase(ctx context.Context, offset int) ([]T, error) {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	var src T
+	var src []T
 	err := v.base.WithContext(dbCtx).Order("id").
-		Offset(offset).First(&src).Error
+		Offset(offset).
+		Limit(v.batchSize).
+		Find(&src).Error
 	return src, err
 }
 
-func (v *Validator[T]) incrFromBase(ctx context.Context, offset int) (T, error) {
+func (v *Validator[T]) incrFromBase(ctx context.Context, offset int) ([]T, error) {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	var src T
+	var src []T
 	err := v.base.WithContext(dbCtx).
 		Where("utime > ?", v.utime).
 		Order("utime").
-		Offset(offset).First(&src).Error
+		Offset(offset).
+		Limit(v.batchSize).
+		Find(&src).Error
 	return src, err
 }
 
