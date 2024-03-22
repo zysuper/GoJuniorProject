@@ -43,6 +43,10 @@ func (p *PickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 type Picker struct {
 	conns []*weightConn
 	lock  sync.Mutex
+	// 动态加权值
+	dynWeight int
+	// weight 最大值
+	maxWeight int
 }
 
 func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
@@ -68,13 +72,14 @@ func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 		SubConn: maxCC.SubConn,
 		Done: func(info balancer.DoneInfo) {
 			// 要在这里进一步调整weight/currentWeight
-			// failover 要在这里做文章
-			// 根据调用结果的具体错误信息进行容错
-			// 1. 如果要是触发了限流了，
-			// 1.1 你可以考虑直接挪走这个节点，后面再挪回来
-			// 1.2 你可以考虑直接将 weight/currentWeight 调整到极低
-			// 2. 触发了熔断呢？
-			// 3. 降级呢？
+			if info.Err != nil {
+				// 降级,但是最多降到 0.
+				maxCC.currentWeight = max(maxCC.currentWeight-p.dynWeight, 0)
+			} else {
+				// 提高权重,但是不大于最大权重.
+				// 如果不设置最大权重，那么就会导致只有这个节点被调用了.
+				maxCC.currentWeight = min(maxCC.currentWeight+p.dynWeight, p.maxWeight)
+			}
 		},
 	}, nil
 
