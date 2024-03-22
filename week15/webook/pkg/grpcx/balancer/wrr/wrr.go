@@ -37,6 +37,10 @@ func (p *PickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 
 	return &Picker{
 		conns: conns,
+		// 默认 10
+		dynWeight: 10,
+		// 默认 2 倍 total weight,
+		maxWeightBoost: 2,
 	}
 }
 
@@ -46,7 +50,7 @@ type Picker struct {
 	// 动态加权值
 	dynWeight int
 	// weight 最大值
-	maxWeight int
+	maxWeightBoost int
 }
 
 func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
@@ -78,7 +82,7 @@ func (p *Picker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
 			} else {
 				// 提高权重,但是不大于最大权重.
 				// 如果不设置最大权重，那么就会导致只有这个节点被调用了.
-				maxCC.currentWeight = min(maxCC.currentWeight+p.dynWeight, p.maxWeight)
+				maxCC.currentWeight = min(maxCC.currentWeight+p.dynWeight, p.maxWeightBoost*total)
 			}
 		},
 	}, nil

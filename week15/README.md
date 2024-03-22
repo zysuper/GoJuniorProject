@@ -18,4 +18,5 @@
 
 如果不设置最大权重，那么就会导致只有这个节点被调用了.
 
-[实现快速跳转...](./webook/pkg/grpcx/balancer/wrr/wrr.go#L75)
+[Done回调实现快速跳转...](./webook/pkg/grpcx/balancer/wrr/wrr.go#L77)
+[动态参数默认值的设置](./webook/pkg/grpcx/balancer/wrr/wrr.go#L40)
