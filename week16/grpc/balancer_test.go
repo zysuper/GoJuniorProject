@@ -51,7 +51,11 @@ func (s *BalancerTestSuite) TestClientCustomWRR() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		resp, err := client.GetByID(ctx, &GetByIDRequest{Id: 123})
 		cancel()
-		require.NoError(t, err)
+		if err != nil {
+			t.Errorf(">> call failed: %v", err)
+			continue
+		}
+		//require.NoError(t, err)
 		t.Log(resp.User)
 	}
 }
@@ -159,6 +163,9 @@ func (s *BalancerTestSuite) TestServer() {
 	s.startServer(":8092", 30, &FailedServer{
 		Name: ":8092",
 	})
+	//s.startServer(":8092", 30, &Server{
+	//	Name: ":8092",
+	//})
 }
 
 func (s *BalancerTestSuite) startServer(addr string, weight int, svc UserServiceServer) {
