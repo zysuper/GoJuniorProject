@@ -40,7 +40,7 @@ func (r *MySQLBinlogConsumer) Start() error {
 
 func (r *MySQLBinlogConsumer) Consume(msg *sarama.ConsumerMessage,
 	val canalx.Message[dao.FollowRelation]) error {
-	if val.Table != "follow_relation" {
+	if val.Table != "follow_relations" {
 		// 我不关心的
 		return nil
 	}

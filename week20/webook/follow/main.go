@@ -10,6 +10,8 @@ import (
 func main() {
 	initViperV2Watch()
 	app := Init()
+	// 启动 canal 监听.
+	app.consumers.Start()
 	err := app.server.Serve()
 	if err != nil {
 		panic(err)
