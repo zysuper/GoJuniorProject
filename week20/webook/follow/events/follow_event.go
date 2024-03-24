@@ -2,9 +2,8 @@ package events
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/article/domain"
-	"gitee.com/geekbang/basic-go/webook/article/repository"
-	"gitee.com/geekbang/basic-go/webook/article/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/follow/repository"
+	"gitee.com/geekbang/basic-go/webook/follow/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/canalx"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/pkg/saramax"
@@ -15,11 +14,15 @@ import (
 type MySQLBinlogConsumer struct {
 	client sarama.Client
 	l      logger.LoggerV1
-	repo   *repository.CachedArticleRepository
+	repo   repository.FollowRepository
+}
+
+func NewFollowConsumer(client sarama.Client, l logger.LoggerV1, repo repository.FollowRepository) Consumer {
+	return &MySQLBinlogConsumer{client: client, l: l, repo: repo}
 }
 
 func (r *MySQLBinlogConsumer) Start() error {
-	cg, err := sarama.NewConsumerGroupFromClient("pub_articles_cache",
+	cg, err := sarama.NewConsumerGroupFromClient("pub_follow_cache",
 		r.client)
 	if err != nil {
 		return err
@@ -27,7 +30,7 @@ func (r *MySQLBinlogConsumer) Start() error {
 	go func() {
 		err := cg.Consume(context.Background(),
 			[]string{"webook_binlog"},
-			saramax.NewHandler[canalx.Message[dao.PublishedArticle]](r.l, r.Consume))
+			saramax.NewHandler[canalx.Message[dao.FollowRelation]](r.l, r.Consume))
 		if err != nil {
 			r.l.Error("退出了消费循环异常", logger.Error(err))
 		}
@@ -36,9 +39,9 @@ func (r *MySQLBinlogConsumer) Start() error {
 }
 
 func (r *MySQLBinlogConsumer) Consume(msg *sarama.ConsumerMessage,
-	val canalx.Message[dao.PublishedArticle]) error {
-	// 因为共用了一个 topic，所以会有很多表的数据，不是自己的就不用管了
-	if val.Table != "published_articles" {
+	val canalx.Message[dao.FollowRelation]) error {
+	if val.Table != "follow_relation" {
+		// 我不关心的
 		return nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -46,12 +49,13 @@ func (r *MySQLBinlogConsumer) Consume(msg *sarama.ConsumerMessage,
 	for _, data := range val.Data {
 		var err error
 		switch data.Status {
-		case domain.ArticleStatusPublished.ToUint8():
-			err = r.repo.Cache().SetPub(ctx, r.repo.ToDomain(dao.Article(data)))
-		case domain.ArticleStatusPrivate.ToUint8():
-			err = r.repo.Cache().DelPub(ctx, data.Id)
+		case dao.FollowRelationStatusActive:
+			err = r.repo.Cache().Follow(ctx, data.Follower, data.Followee)
+		case dao.FollowRelationStatusInactive:
+			err = r.repo.Cache().CancelFollow(ctx, data.Follower, data.Followee)
 		}
 		if err != nil {
+			// 你可以继续，也可以中断
 			return err
 		}
 	}

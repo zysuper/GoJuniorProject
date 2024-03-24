@@ -18,6 +18,9 @@ type FollowRepository interface {
 	// InactiveFollowRelation 取消关注
 	InactiveFollowRelation(ctx context.Context, follower int64, followee int64) error
 	GetFollowStatics(ctx context.Context, uid int64) (domain.FollowStatics, error)
+
+	// Cache 是否有缓存
+	Cache() cache.FollowCache
 }
 
 type CachedRelationRepository struct {
@@ -54,7 +57,10 @@ func (d *CachedRelationRepository) InactiveFollowRelation(ctx context.Context, f
 		return err
 	}
 	// -1
-	return d.cache.CancelFollow(ctx, follower, followee)
+	// return d.cache.CancelFollow(ctx, follower, followee)
+
+	// 被 canal 接管了.
+	return nil
 }
 
 func (d *CachedRelationRepository) GetFollowee(ctx context.Context, follower, offset, limit int64) ([]domain.FollowRelation, error) {
@@ -89,7 +95,10 @@ func (d *CachedRelationRepository) AddFollowRelation(ctx context.Context, c doma
 		return err
 	}
 	// 更新缓存里面的关注了多少人，以及有多少粉丝的计数， +1
-	return d.cache.Follow(ctx, c.Follower, c.Followee)
+	// return d.cache.Follow(ctx, c.Follower, c.Followee)
+
+	// 更新操作被 canal 接管了。
+	return nil
 }
 
 func (d *CachedRelationRepository) toDomain(fr dao.FollowRelation) domain.FollowRelation {
@@ -104,6 +113,10 @@ func (d *CachedRelationRepository) toEntity(c domain.FollowRelation) dao.FollowR
 		Followee: c.Followee,
 		Follower: c.Follower,
 	}
+}
+
+func (d *CachedRelationRepository) Cache() cache.FollowCache {
+	return d.cache
 }
 
 func NewFollowRelationRepository(dao dao.FollowRelationDao,

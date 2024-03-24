@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/follow/events"
 	"gitee.com/geekbang/basic-go/webook/pkg/grpcx"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -29,5 +30,6 @@ func initViperV2Watch() {
 }
 
 type App struct {
-	server *grpcx.Server
+	server    *grpcx.Server
+	consumers events.Consumer
 }
